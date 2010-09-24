@@ -1,10 +1,13 @@
-module Control.Concurrent.Spawn(
-    -- * Spawn 
+module Control.Concurrent.Spawn
+  ( -- * Spawn 
     spawn
 
     -- * Spawn with @'try'@
   , Result
-  , spawnTry) where
+  , spawnTry
+  
+    -- * Limiting concurrency
+  , pool ) where
 
 import Control.Concurrent
 import Control.Exception
@@ -30,3 +33,11 @@ spawn :: IO a -> IO (IO a)
 spawn m = do
   r <- spawnTry m
   return (r >>= either throwIO return)
+
+-- | Given /n/, produces a function to wrap @'IO'@ actions.
+-- No more than /n/ wrapped actions will be in progress at
+-- one time.
+pool :: Int -> IO (IO a -> IO a)
+pool n = do
+  s <- newQSem n
+  return $ bracket_ (waitQSem s) (signalQSem s)
