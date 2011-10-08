@@ -7,7 +7,11 @@ module Control.Concurrent.Spawn
     -- * Spawn with @'try'@
   , Result
   , spawnTry
-  
+
+    -- * Higher-level functions
+  , parMapIO
+  , parMapIO_
+
     -- * Limiting concurrency
   , pool ) where
 
@@ -51,6 +55,7 @@ spawn m = do
   r <- spawnTry m
   return (r >>= either throwIO return)
 
+
 -- | Given /n/, produces a function to wrap @'IO'@ actions.
 -- No more than /n/ wrapped actions will be in progress at
 -- one time.
@@ -58,3 +63,21 @@ pool :: Int -> IO (IO a -> IO a)
 pool n = do
   s <- newQSem n
   return $ bracket_ (waitQSem s) (signalQSem s)
+
+
+-- | Execute a separate thread of IO for each element of a list, and
+-- collect results.
+--
+-- The analogy to @parMap@ is misleading.  The concurrent execution
+-- of these actions is non-deterministic and can affect results.
+-- However, @'parMapIO'@ is expected to be most useful for actions
+-- which do not interact.
+parMapIO :: (a -> IO b) -> [a] -> IO [b]
+parMapIO f xs = mapM (spawn . f) xs >>= sequence
+
+-- | Execute a separate thread of IO for each element of a list.
+--
+-- Results are discarded, but the @'parMapIO_'@ action does not
+-- complete until all threads have finished.
+parMapIO_ :: (a -> IO b) -> [a] -> IO ()
+parMapIO_ f xs = mapM (spawn . f) xs >>= sequence_
