@@ -1,5 +1,5 @@
 name:                spawn
-version:             0.2
+version:             0.3
 license:             BSD3
 license-file:        LICENSE
 synopsis:            Tiny library for concurrent computations
