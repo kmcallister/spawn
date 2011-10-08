@@ -2,7 +2,7 @@ name:                spawn
 version:             0.2
 license:             BSD3
 license-file:        LICENSE
-synopsis:            Tiny library for joinable computations / threads with results.
+synopsis:            Tiny library for concurrent computations
 category:            Concurrency, Concurrent, Control
 author:              Keegan McAllister <mcallister.keegan@gmail.com>
 maintainer:          Keegan McAllister <mcallister.keegan@gmail.com>
