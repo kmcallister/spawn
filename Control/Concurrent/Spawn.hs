@@ -11,12 +11,14 @@ module Control.Concurrent.Spawn
     -- * Higher-level functions
   , parMapIO
   , parMapIO_
+  , (|*|)
 
     -- * Limiting concurrency
   , pool ) where
 
 import Control.Concurrent
 import Control.Exception
+import Control.Monad
 
 -- | Two ways a computation of type @'IO' a@ can end.
 type Result a = Either SomeException a
@@ -81,3 +83,13 @@ parMapIO f xs = mapM (spawn . f) xs >>= sequence
 -- complete until all threads have finished.
 parMapIO_ :: (a -> IO b) -> [a] -> IO ()
 parMapIO_ f xs = mapM (spawn . f) xs >>= sequence_
+
+
+infixl 4 |*|
+
+-- | A concurrent version of @'ap'@ or @(\<*\>)@ for @'IO'@.
+--
+-- Spawns a thread for the right-hand action, while executing the
+-- left-hand action in the current thread.
+(|*|) :: IO (a -> b) -> IO a -> IO b
+mf |*| mx = spawn mx >>= (mf `ap`)
