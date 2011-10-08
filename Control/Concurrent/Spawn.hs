@@ -1,3 +1,5 @@
+{-# LANGUAGE
+    CPP #-}
 module Control.Concurrent.Spawn
   ( -- * Spawn 
     spawn
@@ -18,13 +20,28 @@ type Result a = Either SomeException a
 -- | Spawn a concurrent computation.  Produces an action which
 -- demands a @'Result'@.
 spawnTry :: IO a -> IO (IO (Result a))
+
+-- We block asynchronous exceptions around 'forkIO', then restore
+-- the parent thread's exception mask state inside 'try'. This
+-- prevents an exception from interrupting 'putMVar', which would
+-- deadlock the parent.
+--
+-- The API for doing this changed in base-4.3 with GHC 7.0.
+
+#if MIN_VERSION_base(4,3,0)
 spawnTry m = do
   v <- newEmptyMVar
-  -- block async exns, then unblock inside 'try' unless parent was blocked
-  -- avoids dropping an exception
+  _ <- mask $ \restore -> forkIO (try (restore m) >>= putMVar v)
+  return (readMVar v)
+
+#else
+spawnTry m = do
+  v <- newEmptyMVar
   b <- blocked
   _ <- block $ forkIO (try (if b then m else unblock m) >>= putMVar v)
   return (readMVar v)
+
+#endif
 
 -- | Spawn a concurrent computation.  Produces an action which
 -- demands the result.  Any exception from the original computation

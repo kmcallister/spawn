@@ -21,6 +21,9 @@ library
   build-depends:
       base >= 3 && < 5
 
+  other-extensions:
+      CPP
+
 source-repository head
     type:     git
     location: git://github.com/kmcallister/spawn.git
