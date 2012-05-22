@@ -1,5 +1,5 @@
 name:                spawn
-version:             0.3
+version:             0.3.1
 license:             BSD3
 license-file:        LICENSE
 synopsis:            Tiny library for concurrent computations
@@ -11,6 +11,10 @@ cabal-version:       >=1.6
 description:
   Spawn a concurrent 'IO' computation and later demand its result.  Tiny API
   and implementation.
+  .
+  New in version 0.3.1:
+  .
+    * Added functions @concurrently@, @concurrently_@.
   .
   New in version 0.3:
   .
