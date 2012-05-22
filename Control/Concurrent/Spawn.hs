@@ -11,6 +11,11 @@ module Control.Concurrent.Spawn
     -- * Higher-level functions
   , parMapIO
   , parMapIO_
+
+  -- Like parMapIO without the function application:
+  , concurrently
+  , concurrently_
+
   , (|*|)
 
     -- * Limiting concurrency
@@ -67,7 +72,7 @@ pool n = do
   return $ bracket_ (waitQSem s) (signalQSem s)
 
 
--- | Execute a separate thread of IO for each element of a list, and
+-- | Execute a separate thread of IO for each function in a list, and
 -- collect results.
 --
 -- The analogy to @parMap@ is misleading.  The concurrent execution
@@ -75,15 +80,27 @@ pool n = do
 -- However, @'parMapIO'@ is expected to be most useful for actions
 -- which do not interact.
 parMapIO :: (a -> IO b) -> [a] -> IO [b]
-parMapIO f xs = mapM (spawn . f) xs >>= sequence
+parMapIO f = concurrently . map f
 
--- | Execute a separate thread of IO for each element of a list.
+-- | Execute a separate thread of IO for each function in a list.
 --
 -- Results are discarded, but the @'parMapIO_'@ action does not
 -- complete until all threads have finished.
 parMapIO_ :: (a -> IO b) -> [a] -> IO ()
-parMapIO_ f xs = mapM (spawn . f) xs >>= sequence_
+parMapIO_ f = concurrently_ . map f
 
+
+-- | Execute a separate thread of IO for each action in a list, and
+-- collect results.
+concurrently :: [IO a] -> IO [a]
+concurrently xs = mapM spawn xs >>= sequence
+
+-- | Execute a separate thread of IO for each action in a list.
+--
+-- Results are discarded, but the @'concurrently_'@ action does not
+-- complete until all threads have finished.
+concurrently_ :: [IO a] -> IO ()
+concurrently_ xs = mapM spawn xs >>= sequence_
 
 infixl 4 |*|
 
